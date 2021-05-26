@@ -1,5 +1,5 @@
 import { inject, injectable } from "inversify"
-import { Controller, Get, Route, Query, Tags } from "tsoa"
+import { Controller, Get, Route, Query, Tags, Path } from "tsoa"
 import { ICaseStudy } from "../../2 - Domain/DomainObjects/ICaseStudy"
 import { ISearchResult } from "../../2 - Domain/DomainObjects/ISearchResult"
 import { ICaseStudyService } from "../../2 - Domain/Services/CaseStudyService"
@@ -40,6 +40,35 @@ export class CaseStudyController extends Controller {
         take,
         sortBy,
         orderBy
+      )
+      return this._mapToSearchResult(results)
+    } catch (error) {
+      this.setStatus(400)
+      return {
+        total: 0,
+        data: [],
+        error: error.message
+      }
+    }
+  }
+
+  /**
+   * Retrieve related case studies based on a case study id.
+   * Uses Elasticsearch in the background to execute.
+   *
+   * @param id the id of the document
+   */
+  @Get("/related/{id}")
+  public async GetRelatedDocuments(
+    @Path() id: string,
+    @Query() skip = 0,
+    @Query() take = 3
+  ): Promise<ISearchResultDto<ICaseStudyDto>> {
+    try {
+      const results = await this.caseStudyService.GetRelatedDocuments(
+        id,
+        skip,
+        take
       )
       return this._mapToSearchResult(results)
     } catch (error) {
